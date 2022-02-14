@@ -1,7 +1,7 @@
 import os
 import json
 
-from typing import List, Tuple
+from typing import List
 from dataclasses import dataclass
 from collections import deque
 
@@ -119,25 +119,6 @@ class LinkGraph:
                         if len(seen_eids) > max_nodes:
                             return set()
         return set([entity_dict.entity_to_idx(e_id) for e_id in seen_eids])
-
-    def shortest_path(self, src: str, dst: str, max_len: int = 3) -> Tuple[int, int]:
-        if src == dst:
-            return 0, 0
-        seen = set()
-        seen.add(src)
-        queue = deque([src])
-        for i in range(max_len):
-            len_q = len(queue)
-            for _ in range(len_q):
-                tp = queue.popleft()
-                for node in self.graph.get(tp, set()):
-                    if node == dst:
-                        return i + 1, len(seen)
-                    if node not in seen:
-                        queue.append(node)
-                        seen.add(node)
-
-        return max_len + 1, len(seen)
 
 
 def reverse_triplet(obj):

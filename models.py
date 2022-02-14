@@ -8,15 +8,10 @@ from dataclasses import dataclass
 from transformers import AutoModel, AutoConfig
 
 from triplet_mask import construct_mask
-from logger_config import logger
 
 
-def build_model_from_arch(args) -> nn.Module:
-    if args.arch == 'bert':
-        return CustomBertModel(args)
-    else:
-        logger.error('Unknown arch: {}'.format(args.arch))
-        assert False
+def build_model(args) -> nn.Module:
+    return CustomBertModel(args)
 
 
 @dataclass

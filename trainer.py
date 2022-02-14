@@ -12,7 +12,7 @@ from doc import Dataset, collate
 from utils import AverageMeter, ProgressMeter
 from utils import save_checkpoint, delete_old_ckt, report_num_trainable_parameters, move_to_cuda, get_model_obj
 from metric import accuracy
-from models import build_model_from_arch, ModelOutput
+from models import build_model, ModelOutput
 from dict_hub import build_tokenizer
 from logger_config import logger
 
@@ -26,7 +26,7 @@ class Trainer:
 
         # create model
         logger.info("=> creating model '{}'".format(args.arch))
-        self.model = build_model_from_arch(self.args)
+        self.model = build_model(self.args)
         self._freeze_layers(self.args)
         logger.info(self.model)
         self._setup_distributed_training()

@@ -9,8 +9,6 @@ import torch.backends.cudnn as cudnn
 parser = argparse.ArgumentParser(description='example usage for various pretrained models')
 parser.add_argument('--pretrained-model', default='bert-base-uncased', type=str, metavar='N',
                     help='path to pretrained model')
-parser.add_argument('--arch', default='bert', type=str, metavar='N',
-                    help='model architecture')
 parser.add_argument('--task', default='wn18rr', type=str, metavar='N',
                     help='dataset name')
 parser.add_argument('--train-path', default='', type=str, metavar='N',

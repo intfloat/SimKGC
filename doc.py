@@ -200,7 +200,7 @@ def to_indices_and_mask(batch_tensor, pad_token_id=0, need_mask=True):
     mx_len = max([t.size(0) for t in batch_tensor])
     batch_size = len(batch_tensor)
     indices = torch.LongTensor(batch_size, mx_len).fill_(pad_token_id)
-    # bert里mask取值为1表示该位置是有效的
+    # For BERT, mask value of 1 corresponds to a valid position
     if need_mask:
         mask = torch.ByteTensor(batch_size, mx_len).fill_(0)
     for i, t in enumerate(batch_tensor):

@@ -6,7 +6,6 @@ set -e
 device_id=0
 model_name="test"
 task="FB15k237"
-model_arch="bert"
 if [[ $# -ge 1 && ! "$1" =~ "--"* ]]; then
     device_id=$1
     shift
@@ -19,18 +18,12 @@ if [[ $# -ge 1 && ! "$1" =~ "--"* ]]; then
     task=$1
     shift
 fi
-if [[ $# -ge 1 && ! "$1" =~ "--"* ]]; then
-    model_arch=$1
-    shift
-fi
 
 MODEL_SAVE_DIR="./checkpoint/${model_name}-`date +%F-%H%M.%S`/"
 LOG="${MODEL_SAVE_DIR}/run.log"
 mkdir -p ${MODEL_SAVE_DIR}
 
-# distributed data parallel: --multiprocessing-distributed
 CUDA_VISIBLE_DEVICES=${device_id} nohup python3 -u main.py \
---arch ${model_arch} \
 --model-dir ${MODEL_SAVE_DIR} \
 --pretrained-model bert-base-uncased \
 --pooling mean \

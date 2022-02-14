@@ -9,7 +9,7 @@ from collections import OrderedDict
 
 from doc import collate, Example, Dataset
 from config import args
-from models import build_model_from_arch
+from models import build_model
 from utils import AttrDict, move_to_device
 from dict_hub import build_tokenizer
 from logger_config import logger
@@ -28,7 +28,7 @@ class BertPredictor:
         self.train_args.__dict__ = ckt_dict['args']
         self._setup_args()
         build_tokenizer(self.train_args)
-        self.model = build_model_from_arch(self.train_args)
+        self.model = build_model(self.train_args)
 
         # DataParallel will introduce 'module.' prefix
         state_dict = ckt_dict['state_dict']

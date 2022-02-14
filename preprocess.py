@@ -1,11 +1,9 @@
-import re
 import os
 import json
 import argparse
 import multiprocessing as mp
 
 from multiprocessing import Pool
-from collections import defaultdict
 from typing import List
 
 parser = argparse.ArgumentParser(description='preprocess')
@@ -143,32 +141,6 @@ def preprocess_fb15k237(path):
     return examples
 
 
-def _process_line_conceptnet(line: str) -> dict:
-    fs = line.strip().split('\t')
-    assert len(fs) == 3, 'Invalid line: {}'.format(line.strip())
-    relation, head, tail = fs[0], fs[1], fs[2]
-    relation = re.sub(r'([A-Z])', r' \1', relation).strip()
-    example = {'head_id': head,
-               'head': head,
-               'relation': relation,
-               'tail_id': tail,
-               'tail': tail}
-    return example
-
-
-def preprocess_conceptnet(path):
-    lines = open(path, 'r', encoding='utf-8').readlines()
-    pool = Pool(processes=args.workers)
-    examples = pool.map(_process_line_conceptnet, lines)
-    pool.close()
-    pool.join()
-
-    out_path = path + '.json'
-    json.dump(examples, open(out_path, 'w', encoding='utf-8'), ensure_ascii=False, indent=4)
-    print('Save {} examples to {}'.format(len(examples), out_path))
-    return examples
-
-
 wiki5m_id2rel = {}
 wiki5m_id2ent = {}
 wiki5m_id2text = {}
@@ -287,8 +259,6 @@ def main():
             all_examples += preprocess_wn18rr(path)
         elif args.task.lower() == 'fb15k237':
             all_examples += preprocess_fb15k237(path)
-        elif args.task.lower() == 'conceptnet':
-            all_examples += preprocess_conceptnet(path)
         elif args.task.lower() in ['wiki5m_trans', 'wiki5m_ind']:
             all_examples += preprocess_wiki5m(path, is_train=(path == args.train_path))
         else:
@@ -298,8 +268,6 @@ def main():
         id2text = {k: v[2] for k, v in wn18rr_id2ent.items()}
     elif args.task.lower() == 'fb15k237':
         id2text = {k: v[2] for k, v in fb15k_id2ent.items()}
-    elif args.task.lower() == 'conceptnet':
-        id2text = defaultdict(lambda: '')
     elif args.task.lower() in ['wiki5m_trans', 'wiki5m_ind']:
         id2text = wiki5m_id2text
     else:
