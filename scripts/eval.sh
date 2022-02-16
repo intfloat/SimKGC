@@ -3,21 +3,22 @@
 set -x
 set -e
 
-device_id=0
 model_path="bert"
 task="WN18RR"
 if [ $# -ge 1 ]; then
-    device_id=$1
+    model_path=$1
 fi
 if [ $# -ge 2 ]; then
-    model_path=$2
+    task=$2
 fi
+
+if [ -z "$DATA_DIR" ]; then
+  DATA_DIR="${DIR}/data/${task}"
+fi
+
+test_path="${DATA_DIR}/test.txt.json"
 if [ $# -ge 3 ]; then
-    task=$3
-fi
-test_path="./data/${task}/test.txt.json"
-if [ $# -ge 4 ]; then
-    test_path=$4
+    test_path=$3
 fi
 
 neighbor_weight=0.05
@@ -32,11 +33,10 @@ if [ "${task}" = "wiki5m_ind" ]; then
 fi
 
 python3 -u evaluate.py \
---gpu "${device_id}" \
 --task "${task}" \
 --is-test \
---model-dir "${model_path}" \
+--eval-model-path "${model_path}" \
 --neighbor-weight "${neighbor_weight}" \
 --rerank-n-hop "${rerank_n_hop}" \
---train-path "./data/${task}/train.txt.json" \
+--train-path "${DATA_DIR}/train.txt.json" \
 --valid-path "${test_path}"

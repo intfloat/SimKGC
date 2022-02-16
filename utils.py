@@ -19,6 +19,7 @@ def save_checkpoint(state: dict, is_best: bool, filename: str):
     torch.save(state, filename)
     if is_best:
         shutil.copyfile(filename, os.path.dirname(filename) + '/model_best.mdl')
+    shutil.copyfile(filename, os.path.dirname(filename) + '/model_last.mdl')
 
 
 def delete_old_ckt(path_pattern: str, keep=5):

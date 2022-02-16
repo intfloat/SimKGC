@@ -1,5 +1,7 @@
+import glob
 import json
 import torch
+import shutil
 
 import torch.nn as nn
 import torch.utils.data
@@ -25,14 +27,14 @@ class Trainer:
         build_tokenizer(args)
 
         # create model
-        logger.info("=> creating model '{}'".format(args.arch))
+        logger.info("=> creating model")
         self.model = build_model(self.args)
         self._freeze_layers(self.args)
         logger.info(self.model)
-        self._setup_distributed_training()
+        self._setup_training()
 
         # define loss function (criterion) and optimizer
-        self.criterion = nn.CrossEntropyLoss().cuda(args.gpu)
+        self.criterion = nn.CrossEntropyLoss().cuda()
 
         self.optimizer = AdamW([p for p in self.model.parameters() if p.requires_grad],
                                lr=args.lr,
@@ -41,28 +43,21 @@ class Trainer:
 
         train_dataset = Dataset(path=args.train_path, task=args.task)
         valid_dataset = Dataset(path=args.valid_path, task=args.task) if args.valid_path else None
-        if args.distributed:
-            num_training_steps = args.epochs * len(train_dataset) // max(self.ngpus_per_node * args.batch_size, 1)
-        else:
-            num_training_steps = args.epochs * len(train_dataset) // max(args.batch_size, 1)
+        num_training_steps = args.epochs * len(train_dataset) // max(args.batch_size, 1)
         args.warmup = min(args.warmup, num_training_steps // 10)
         logger.info('Total training steps: {}, warmup steps: {}'.format(num_training_steps, args.warmup))
         self.scheduler = self._create_lr_scheduler(num_training_steps)
         self.best_metric = None
 
-        self.train_sampler = None
-        if args.distributed:
-            self.train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
-
         self.train_loader = torch.utils.data.DataLoader(
             train_dataset,
             batch_size=args.batch_size,
-            shuffle=(self.train_sampler is None),
+            shuffle=True,
             collate_fn=collate,
             num_workers=args.workers,
             pin_memory=True,
-            sampler=self.train_sampler,
             drop_last=True)
+
         self.valid_loader = None
         if valid_dataset:
             self.valid_loader = torch.utils.data.DataLoader(
@@ -92,32 +87,31 @@ class Trainer:
             self.scaler = torch.cuda.amp.GradScaler()
 
         for epoch in range(self.args.epochs):
-            if self.args.distributed:
-                self.train_sampler.set_epoch(epoch)
-
             # train for one epoch
             self.train_epoch(epoch)
             self._run_eval(epoch=epoch)
 
+        if self.args.checkpoint_dir != self.args.model_dir:
+            for f in glob.glob('{}/*last.mdl'.format(self.args.checkpoint_dir)):
+                shutil.copy(f, self.args.model_dir)
+            shutil.rmtree(self.args.checkpoint_dir, ignore_errors=True)
+
     @torch.no_grad()
     def _run_eval(self, epoch, step=0):
-        if self.args.multiprocessing_distributed and self.args.rank % self.ngpus_per_node > 0:
-            return
-
         metric_dict = self.eval_epoch(epoch)
         is_best = self.valid_loader and (self.best_metric is None or metric_dict['Acc@1'] > self.best_metric['Acc@1'])
         if is_best:
             self.best_metric = metric_dict
 
-        filename = '{}/checkpoint_{}_{}.mdl'.format(self.args.model_dir, epoch, step)
+        filename = '{}/checkpoint_{}_{}.mdl'.format(self.args.checkpoint_dir, epoch, step)
         if step == 0:
-            filename = '{}/checkpoint_epoch{}.mdl'.format(self.args.model_dir, epoch)
+            filename = '{}/checkpoint_epoch{}.mdl'.format(self.args.checkpoint_dir, epoch)
         save_checkpoint({
             'epoch': epoch,
             'args': self.args.__dict__,
             'state_dict': self.model.state_dict(),
         }, is_best=is_best, filename=filename)
-        delete_old_ckt(path_pattern='{}/checkpoint_*.mdl'.format(self.args.model_dir),
+        delete_old_ckt(path_pattern='{}/checkpoint_*.mdl'.format(self.args.checkpoint_dir),
                        keep=self.args.max_to_keep)
 
     @torch.no_grad()
@@ -168,7 +162,7 @@ class Trainer:
             self.model.train()
 
             if torch.cuda.is_available():
-                batch_dict = {k: v.to(self.args.gpu, non_blocking=True) if torch.is_tensor(v) else v
+                batch_dict = {k: v.to(0, non_blocking=True) if torch.is_tensor(v) else v
                               for k, v in batch_dict.items()}
             batch_size = len(batch_dict['batch_data'])
 
@@ -212,20 +206,11 @@ class Trainer:
                 self._run_eval(epoch=epoch, step=i + 1)
         logger.info('Learning rate: {}'.format(self.scheduler.get_last_lr()[0]))
 
-    def _setup_distributed_training(self):
-        if self.args.distributed:
-            # For multiprocessing distributed, DistributedDataParallel constructor
-            # should always set the single device scope, otherwise,
-            # DistributedDataParallel will use all available devices.
-            torch.cuda.set_device(self.args.gpu)
-            self.model.cuda(self.args.gpu)
-            self.args.workers = int((self.args.workers + self.ngpus_per_node - 1) / self.ngpus_per_node)
-            self.model = torch.nn.parallel.DistributedDataParallel(self.model, device_ids=[self.args.gpu])
-        elif torch.cuda.device_count() > 1:
+    def _setup_training(self):
+        if torch.cuda.device_count() > 1:
             self.model = torch.nn.DataParallel(self.model).cuda()
         elif torch.cuda.is_available():
-            torch.cuda.set_device(self.args.gpu)
-            self.model.to(self.args.gpu)
+            self.model.cuda()
         else:
             logger.info('No gpu will be used')
 

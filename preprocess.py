@@ -213,7 +213,7 @@ def preprocess_wiki5m(path: str, is_train: bool) -> List[dict]:
         _load_wiki5m_id2text(path='{}/wikidata5m_text.txt'.format(os.path.dirname(path)))
 
     lines = open(path, 'r', encoding='utf-8').readlines()
-    pool = Pool(processes=max(8, args.workers))
+    pool = Pool(processes=args.workers)
     examples = pool.map(_process_line_wiki5m, lines)
     pool.close()
     pool.join()
@@ -223,6 +223,7 @@ def preprocess_wiki5m(path: str, is_train: bool) -> List[dict]:
     if is_train:
         examples = [ex for ex in examples if not _has_none_value(ex)]
     else:
+        # Even though it's invalid (contains null values), we should not change validation/test dataset
         print('Invalid examples: {}'.format(json.dumps(invalid_examples, ensure_ascii=False, indent=4)))
     out_path = path + '.json'
     json.dump(examples, open(out_path, 'w', encoding='utf-8'), ensure_ascii=False, indent=4)

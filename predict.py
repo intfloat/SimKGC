@@ -10,7 +10,7 @@ from collections import OrderedDict
 from doc import collate, Example, Dataset
 from config import args
 from models import build_model
-from utils import AttrDict, move_to_device
+from utils import AttrDict, move_to_cuda
 from dict_hub import build_tokenizer
 from logger_config import logger
 
@@ -44,8 +44,8 @@ class BertPredictor:
             logger.info('Use data parallel predictor')
             self.model = torch.nn.DataParallel(self.model).cuda()
             self.use_cuda = True
-        elif args.gpu >= 0 and torch.cuda.is_available():
-            self.model.to(args.gpu)
+        elif torch.cuda.is_available():
+            self.model.cuda()
             self.use_cuda = True
         logger.info('Load model from {} successfully'.format(ckt_path))
 
@@ -70,7 +70,7 @@ class BertPredictor:
         hr_tensor_list, tail_tensor_list = [], []
         for idx, batch_dict in enumerate(data_loader):
             if self.use_cuda:
-                batch_dict = move_to_device(batch_dict, device=args.gpu)
+                batch_dict = move_to_cuda(batch_dict)
             outputs = self.model(**batch_dict)
             hr_tensor_list.append(outputs['hr_vector'])
             tail_tensor_list.append(outputs['tail_vector'])
@@ -94,7 +94,7 @@ class BertPredictor:
         for idx, batch_dict in enumerate(tqdm.tqdm(data_loader)):
             batch_dict['only_ent_embedding'] = True
             if self.use_cuda:
-                batch_dict = move_to_device(batch_dict, device=args.gpu)
+                batch_dict = move_to_cuda(batch_dict)
             outputs = self.model(**batch_dict)
             ent_tensor_list.append(outputs['ent_vectors'])
 

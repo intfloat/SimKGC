@@ -17,6 +17,8 @@ parser.add_argument('--valid-path', default='', type=str, metavar='N',
                     help='path to valid data')
 parser.add_argument('--model-dir', default='', type=str, metavar='N',
                     help='path to model dir')
+parser.add_argument('--checkpoint-dir', default='', type=str, metavar='N',
+                    help='for efficient checkpointing, only used for cloud storage')
 parser.add_argument('--warmup', default=400, type=int, metavar='N',
                     help='warmup steps')
 parser.add_argument('--freeze-embedding', action='store_true',
@@ -76,47 +78,33 @@ parser.add_argument('--wd', '--weight-decay', default=1e-4, type=float,
                     dest='weight_decay')
 parser.add_argument('-p', '--print-freq', default=50, type=int,
                     metavar='N', help='print frequency (default: 10)')
-parser.add_argument('--world-size', default=1, type=int,
-                    help='number of nodes for distributed training')
-parser.add_argument('--rank', default=0, type=int,
-                    help='node rank for distributed training')
-parser.add_argument('--dist-url', default='tcp://localhost:10001', type=str,
-                    help='url used to set up distributed training')
-parser.add_argument('--dist-backend', default='nccl', type=str,
-                    help='distributed backend')
 parser.add_argument('--seed', default=None, type=int,
                     help='seed for initializing training. ')
-parser.add_argument('--gpu', default=None, type=int,
-                    help='GPU id to use.')
-parser.add_argument('--multiprocessing-distributed', action='store_true',
-                    help='Use multi-processing distributed training to launch '
-                         'N processes per node, which has N GPUs. This is the '
-                         'fastest way to use PyTorch for either single node or '
-                         'multi node data parallel training')
 
 # only used for evaluation
 parser.add_argument('--neighbor-weight', default=0.0, type=float,
                     help='weight for re-ranking entities')
+parser.add_argument('--eval-model-path', default='', type=str, metavar='N',
+                    help='path to model, only used for evaluation')
 
 args = parser.parse_args()
 
 assert not args.train_path or os.path.exists(args.train_path)
-assert os.path.exists(args.model_dir)
-assert args.pooling in ['cls', 'mean', 'max', 'mean_first_last']
-assert args.task.lower() in ['wn18rr', 'fb15k237', 'conceptnet', 'wiki5m_ind', 'wiki5m_trans']
+assert args.pooling in ['cls', 'mean', 'max']
+assert args.task.lower() in ['wn18rr', 'fb15k237', 'wiki5m_ind', 'wiki5m_trans']
 assert args.lr_scheduler in ['linear', 'cosine']
+
+if not args.checkpoint_dir:
+    args.checkpoint_dir = args.model_dir
+if args.model_dir:
+    os.makedirs(args.model_dir, exist_ok=True)
+if not args.model_dir:
+    assert os.path.exists(args.eval_model_path), 'One of args.model_dir and args.eval_model_path should be valid path'
 
 if args.seed is not None:
     random.seed(args.seed)
     torch.manual_seed(args.seed)
     cudnn.deterministic = True
-    warnings.warn('You have chosen to seed training. '
-                  'This will turn on the CUDNN deterministic setting, '
-                  'which can slow down your training considerably! '
-                  'You may see unexpected behavior when restarting '
-                  'from checkpoints.')
-
-args.distributed = args.world_size > 1 or args.multiprocessing_distributed
 
 try:
     if args.use_amp:
@@ -124,3 +112,8 @@ try:
 except Exception:
     args.use_amp = False
     warnings.warn('AMP training is not available, set use_amp=False')
+
+if not torch.cuda.is_available():
+    args.use_amp = False
+    args.print_freq = 1
+    warnings.warn('GPU is not available, set use_amp=False and print_freq=1')

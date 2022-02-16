@@ -3,42 +3,34 @@
 set -x
 set -e
 
-device_id=0
-model_name="test"
-task="WN18RR"
-if [[ $# -ge 1 && ! "$1" =~ "--"* ]]; then
-    device_id=$1
-    shift
+TASK="WN18RR"
+
+DIR="$( cd "$( dirname "$0" )" && cd .. && pwd )"
+echo "working directory: ${DIR}"
+
+if [ -z "$OUTPUT_DIR" ]; then
+  OUTPUT_DIR="${DIR}/checkpoint/${TASK}_$(date +%F-%H%M.%S)"
 fi
-if [[ $# -ge 1 && ! "$1" =~ "--"* ]]; then
-    model_name=$1
-    shift
-fi
-if [[ $# -ge 1 && ! "$1" =~ "--"* ]]; then
-    task=$1
-    shift
+if [ -z "$DATA_DIR" ]; then
+  DATA_DIR="${DIR}/data/${TASK}"
 fi
 
-MODEL_SAVE_DIR="./checkpoint/${model_name}-`date +%F-%H%M.%S`/"
-LOG="${MODEL_SAVE_DIR}/run.log"
-mkdir -p ${MODEL_SAVE_DIR}
-
-CUDA_VISIBLE_DEVICES=${device_id} nohup python3 -u main.py \
---model-dir ${MODEL_SAVE_DIR} \
+python3 -u main.py \
+--model-dir "${OUTPUT_DIR}" \
 --pretrained-model bert-base-uncased \
 --pooling mean \
 --lr 5e-5 \
 --use-link-graph \
---train-path ./data/${task}/train.txt.json \
---valid-path ./data/${task}/valid.txt.json \
---task ${task} \
---batch-size 1024 \
+--train-path "${DATA_DIR}/train.txt.json" \
+--valid-path "${DATA_DIR}/valid.txt.json" \
+--task ${TASK} \
+--batch-size 4 \
 --print-freq 20 \
 --additive-margin 0.02 \
 --use-amp \
 --use-self-negative \
---pre-batch 2 \
+--pre-batch 0 \
 --finetune-t \
 --epochs 50 \
---workers 4 \
---max-to-keep 3 "$@" > ${LOG} 2>&1 &
+--workers 1 \
+--max-to-keep 3 "$@"

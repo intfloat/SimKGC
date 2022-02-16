@@ -110,7 +110,7 @@ def predict_by_split():
     assert os.path.exists(args.train_path)
 
     predictor = BertPredictor()
-    predictor.load(ckt_path=args.model_dir)
+    predictor.load(ckt_path=args.eval_model_path)
     entity_tensor = predictor.predict_by_entities(entity_dict.entity_exs)
 
     forward_metrics = eval_single_direction(predictor,
@@ -122,7 +122,7 @@ def predict_by_split():
     metrics = {k: round((forward_metrics[k] + backward_metrics[k]) / 2, 4) for k in forward_metrics}
     logger.info('Averaged metrics: {}'.format(metrics))
 
-    prefix, basename = os.path.dirname(args.model_dir), os.path.basename(args.model_dir)
+    prefix, basename = os.path.dirname(args.eval_model_path), os.path.basename(args.eval_model_path)
     split = os.path.basename(args.valid_path)
     with open('{}/metrics_{}_{}.json'.format(prefix, split, basename), 'w', encoding='utf-8') as writer:
         writer.write('forward metrics: {}\n'.format(json.dumps(forward_metrics)))
@@ -164,7 +164,7 @@ def eval_single_direction(predictor: BertPredictor,
                              correct=pred_idx == target[idx])
         pred_infos.append(pred_info)
 
-    prefix, basename = os.path.dirname(args.model_dir), os.path.basename(args.model_dir)
+    prefix, basename = os.path.dirname(args.eval_model_path), os.path.basename(args.eval_model_path)
     split = os.path.basename(args.valid_path)
     with open('{}/eval_{}_{}_{}.json'.format(prefix, split, eval_dir, basename), 'w', encoding='utf-8') as writer:
         writer.write(json.dumps([asdict(info) for info in pred_infos], ensure_ascii=False, indent=4))
@@ -174,5 +174,5 @@ def eval_single_direction(predictor: BertPredictor,
 
 
 if __name__ == '__main__':
-    # python3 evaluate.py --gpu 0 --task WN18RR --model-dir ./path/to/model --valid-path ./data/WN18RR/valid.txt.json
+    # python3 evaluate.py --task WN18RR --eval-model-path ./path/to/model --valid-path ./data/WN18RR/valid.txt.json
     predict_by_split()
