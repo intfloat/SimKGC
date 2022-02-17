@@ -29,7 +29,8 @@ def _init_train_triplet_dict():
 def _init_all_triplet_dict():
     global all_triplet_dict
     if not all_triplet_dict:
-        all_triplet_dict = TripletDict(path_list=glob.glob('./data/{}/*.txt.json'.format(args.task)))
+        path_pattern = '{}/*.txt.json'.format(os.path.dirname(args.train_path))
+        all_triplet_dict = TripletDict(path_list=glob.glob(path_pattern))
 
 
 def _init_link_graph():

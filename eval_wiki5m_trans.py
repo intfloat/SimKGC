@@ -60,7 +60,7 @@ def predict_by_split():
     assert os.path.exists(args.eval_model_path)
 
     predictor = BertPredictor()
-    predictor.load(ckt_path=args.model_dir, use_data_parallel=True)
+    predictor.load(ckt_path=args.eval_model_path, use_data_parallel=True)
     _dump_entity_embeddings(predictor)
 
     entity_tensor = _load_entity_embeddings().cuda()
