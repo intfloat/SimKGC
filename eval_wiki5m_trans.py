@@ -15,7 +15,7 @@ SHARD_SIZE = 1000000
 
 
 def _get_shard_path(shard_id=0):
-    return '{}_shard_{}'.format(args.model_dir, shard_id)
+    return '{}/shard_{}'.format(args.checkpoint_dir, shard_id)
 
 
 def _dump_entity_embeddings(predictor: BertPredictor):
@@ -57,7 +57,7 @@ def predict_by_split():
     args.batch_size = max(args.batch_size, torch.cuda.device_count() * 1024)
     assert os.path.exists(args.valid_path)
     assert os.path.exists(args.train_path)
-    assert os.path.exists(args.model_dir)
+    assert os.path.exists(args.eval_model_path)
 
     predictor = BertPredictor()
     predictor.load(ckt_path=args.model_dir, use_data_parallel=True)

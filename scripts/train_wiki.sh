@@ -4,8 +4,9 @@ set -x
 set -e
 
 TASK="wiki5m_ind"
-if [ $# -ge 1 ]; then
+if [[ $# -ge 1 && ! "$1" == "--"* ]]; then
     TASK=$1
+    shift
 fi
 
 DIR="$( cd "$( dirname "$0" )" && cd .. && pwd )"

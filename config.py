@@ -94,12 +94,16 @@ assert args.pooling in ['cls', 'mean', 'max']
 assert args.task.lower() in ['wn18rr', 'fb15k237', 'wiki5m_ind', 'wiki5m_trans']
 assert args.lr_scheduler in ['linear', 'cosine']
 
-if not args.checkpoint_dir:
-    args.checkpoint_dir = args.model_dir
 if args.model_dir:
     os.makedirs(args.model_dir, exist_ok=True)
-if not args.model_dir:
+else:
     assert os.path.exists(args.eval_model_path), 'One of args.model_dir and args.eval_model_path should be valid path'
+    args.model_dir = os.path.dirname(args.eval_model_path)
+
+if not args.checkpoint_dir:
+    args.checkpoint_dir = args.model_dir
+else:
+    os.makedirs(args.checkpoint_dir, exist_ok=True)
 
 if args.seed is not None:
     random.seed(args.seed)
