@@ -35,5 +35,5 @@ python3 -u main.py \
 --finetune-t \
 --pre-batch 0 \
 --epochs 1 \
---workers 4 \
+--workers 3 \
 --max-to-keep 10 "$@"

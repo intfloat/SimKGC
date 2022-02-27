@@ -75,7 +75,7 @@ def predict_by_split():
     metrics = {k: round((forward_metrics[k] + backward_metrics[k]) / 2, 4) for k in forward_metrics}
     logger.info('Averaged metrics: {}'.format(metrics))
 
-    prefix, basename = os.path.dirname(args.model_dir), os.path.basename(args.model_dir)
+    prefix, basename = os.path.dirname(args.eval_model_path), os.path.basename(args.eval_model_path)
     split = os.path.basename(args.valid_path)
     with open('{}/metrics_{}_{}.json'.format(prefix, split, basename), 'w', encoding='utf-8') as writer:
         writer.write('forward metrics: {}\n'.format(json.dumps(forward_metrics)))
