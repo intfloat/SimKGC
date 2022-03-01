@@ -93,7 +93,7 @@ class LinkGraph:
         logger.info('Done build link graph with {} nodes'.format(len(self.graph)))
 
     def get_neighbor_ids(self, entity_id: str, max_to_keep=10) -> List[str]:
-        # make sure different calls returns the same results
+        # make sure different calls return the same results
         neighbor_ids = self.graph.get(entity_id, set())
         return sorted(list(neighbor_ids))[:max_to_keep]
 
@@ -129,7 +129,3 @@ def reverse_triplet(obj):
         'tail_id': obj['head_id'],
         'tail': obj['head']
     }
-
-
-if __name__ == '__main__':
-    pass

@@ -13,6 +13,7 @@ from logger_config import logger
 
 entity_dict = get_entity_dict()
 if args.use_link_graph:
+    # make the lazy data loading happen
     get_link_graph()
 
 
@@ -150,7 +151,7 @@ def load_data(path: str,
             examples.append(Example(**obj))
         if add_backward_triplet:
             examples.append(Example(**reverse_triplet(obj)))
-        data[i] = None  # Hack: save memory for large dataset (Wikidata5M)
+        data[i] = None
 
     return examples
 

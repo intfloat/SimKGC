@@ -110,9 +110,14 @@ bash scripts/eval.sh ./checkpoint/wiki5m_ind/model_last.mdl wiki5m_ind
 We run experiments with 4 V100(32GB) GPUs, please reduce the batch size if you don't have enough resources. 
 Be aware that smaller batch size will hurt the performance for contrastive training. 
 
+2. Does this codebase support distributed data parallel(DDP) training?
+
+No. Some input masks require access to batch data on all GPUs, 
+so currently it only supports data parallel training for ease of implementation.
+
 ## Citation
 
-If you find our paper or code repository useful, please consider citing as follows:
+If you find our paper or code repository helpful, please consider citing as follows:
 
 ```
 @inproceedings{Wang2022SimKGC,

@@ -162,8 +162,7 @@ class Trainer:
             self.model.train()
 
             if torch.cuda.is_available():
-                batch_dict = {k: v.to(0, non_blocking=True) if torch.is_tensor(v) else v
-                              for k, v in batch_dict.items()}
+                batch_dict = move_to_cuda(batch_dict)
             batch_size = len(batch_dict['batch_data'])
 
             # compute output
@@ -176,7 +175,9 @@ class Trainer:
             outputs = ModelOutput(**outputs)
             logits, labels = outputs.logits, outputs.labels
             assert logits.size(0) == batch_size
+            # head + relation -> tail
             loss = self.criterion(logits, labels)
+            # tail -> head + relation
             loss += self.criterion(logits[:, :batch_size].t(), labels)
 
             acc1, acc3 = accuracy(logits, labels, topk=(1, 3))

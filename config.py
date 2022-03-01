@@ -6,7 +6,7 @@ import warnings
 
 import torch.backends.cudnn as cudnn
 
-parser = argparse.ArgumentParser(description='example usage for various pretrained models')
+parser = argparse.ArgumentParser(description='SimKGC arguments')
 parser.add_argument('--pretrained-model', default='bert-base-uncased', type=str, metavar='N',
                     help='path to pretrained model')
 parser.add_argument('--task', default='wn18rr', type=str, metavar='N',
@@ -44,7 +44,7 @@ parser.add_argument('--eval-every-n-step', default=10000, type=int,
 parser.add_argument('--pre-batch', default=0, type=int,
                     help='number of pre-batch used for negatives')
 parser.add_argument('--pre-batch-weight', default=0.5, type=float,
-                    help='the logit weight for logits from pre-batch negatives')
+                    help='the weight for logits from pre-batch negatives')
 parser.add_argument('--additive-margin', default=0.0, type=float, metavar='N',
                     help='additive margin for InfoNCE loss function')
 parser.add_argument('--finetune-t', action='store_true',
@@ -53,12 +53,6 @@ parser.add_argument('--max-num-tokens', default=50, type=int,
                     help='maximum number of tokens')
 parser.add_argument('--use-self-negative', action='store_true',
                     help='use head entity as negative')
-
-# following options are only used for evaluation
-parser.add_argument('--is-test', action='store_true',
-                    help='is in test mode or not')
-parser.add_argument('--rerank-n-hop', default=2, type=int,
-                    help='use n-hops node for re-ranking entities, only used during evaluation')
 
 parser.add_argument('-j', '--workers', default=1, type=int, metavar='N',
                     help='number of data loading workers')
@@ -82,6 +76,10 @@ parser.add_argument('--seed', default=None, type=int,
                     help='seed for initializing training. ')
 
 # only used for evaluation
+parser.add_argument('--is-test', action='store_true',
+                    help='is in test mode or not')
+parser.add_argument('--rerank-n-hop', default=2, type=int,
+                    help='use n-hops node for re-ranking entities, only used during evaluation')
 parser.add_argument('--neighbor-weight', default=0.0, type=float,
                     help='weight for re-ranking entities')
 parser.add_argument('--eval-model-path', default='', type=str, metavar='N',

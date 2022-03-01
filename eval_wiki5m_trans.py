@@ -48,7 +48,6 @@ def _load_entity_embeddings():
 
     entity_tensor = torch.cat(shard_tensors, dim=0)
     logger.info('{} entity embeddings in total'.format(entity_tensor.size(0)))
-    logger.info('tensor device: {}'.format(entity_tensor.device))
     assert entity_tensor.size(0) == len(entity_dict.entity_exs)
     return entity_tensor
 

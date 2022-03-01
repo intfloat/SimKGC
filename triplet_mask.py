@@ -28,14 +28,17 @@ def construct_mask(row_exs: List, col_exs: List = None) -> torch.tensor:
     for i in range(num_row):
         head_id, relation = row_exs[i].head_id, row_exs[i].relation
         neighbor_ids = train_triplet_dict.get_neighbors(head_id, relation)
+        # exact match is enough, no further check needed
         if len(neighbor_ids) <= 1:
             continue
+
         for j in range(num_col):
             if i == j and positive_on_diagonal:
                 continue
             tail_id = col_exs[j].tail_id
             if tail_id in neighbor_ids:
                 triplet_mask[i][j] = False
+
     return triplet_mask
 
 

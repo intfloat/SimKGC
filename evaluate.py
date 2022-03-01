@@ -4,7 +4,7 @@ import tqdm
 import torch
 
 from time import time
-from typing import List
+from typing import List, Tuple
 from dataclasses import dataclass, asdict
 
 from config import args
@@ -44,7 +44,7 @@ def compute_metrics(hr_tensor: torch.tensor,
                     entities_tensor: torch.tensor,
                     target: List[int],
                     examples: List[Example],
-                    k=3, batch_size=256):
+                    k=3, batch_size=256) -> Tuple:
     assert hr_tensor.size(1) == entities_tensor.size(1)
     total = hr_tensor.size(0)
     entity_cnt = len(entity_dict)
@@ -174,5 +174,4 @@ def eval_single_direction(predictor: BertPredictor,
 
 
 if __name__ == '__main__':
-    # python3 evaluate.py --task WN18RR --eval-model-path ./path/to/model --valid-path ./data/WN18RR/valid.txt.json
     predict_by_split()
