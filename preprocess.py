@@ -21,6 +21,38 @@ parser.add_argument('--test-path', default='', type=str, metavar='N',
 args = parser.parse_args()
 mp.set_start_method('fork')
 
+
+def _check_sanity(relation_id_to_str: dict):
+    # We directly use normalized relation string as a key for training and evaluation,
+    # make sure no two relations are normalized to the same surface form
+    relation_str_to_id = {}
+    for rel_id, rel_str in relation_id_to_str.items():
+        if rel_str is None:
+            continue
+        if rel_str not in relation_str_to_id:
+            relation_str_to_id[rel_str] = rel_id
+        elif relation_str_to_id[rel_str] != rel_id:
+            assert False, 'ERROR: {} and {} are both normalized to {}'\
+                .format(relation_str_to_id[rel_str], rel_id, rel_str)
+    return
+
+
+def _normalize_relations(examples: List[dict], normalize_fn, is_train: bool):
+    relation_id_to_str = {}
+    for ex in examples:
+        rel_str = normalize_fn(ex['relation'])
+        relation_id_to_str[ex['relation']] = rel_str
+        ex['relation'] = rel_str
+
+    _check_sanity(relation_id_to_str)
+
+    if is_train:
+        out_path = '{}/relations.json'.format(os.path.dirname(args.train_path))
+        with open(out_path, 'w', encoding='utf-8') as writer:
+            json.dump(relation_id_to_str, writer, ensure_ascii=False, indent=4)
+            print('Save {} relations to {}'.format(len(relation_id_to_str), out_path))
+
+
 wn18rr_id2ent = {}
 
 
@@ -39,7 +71,6 @@ def _process_line_wn18rr(line: str) -> dict:
     fs = line.strip().split('\t')
     assert len(fs) == 3, 'Expect 3 fields for {}'.format(line)
     head_id, relation, tail_id = fs[0], fs[1], fs[2]
-    relation = relation.replace('_', ' ').strip()
     _, head, _ = wn18rr_id2ent[head_id]
     _, tail, _ = wn18rr_id2ent[tail_id]
     example = {'head_id': head_id,
@@ -58,6 +89,9 @@ def preprocess_wn18rr(path):
     examples = pool.map(_process_line_wn18rr, lines)
     pool.close()
     pool.join()
+
+    _normalize_relations(examples, normalize_fn=lambda rel: rel.replace('_', ' ').strip(),
+                         is_train=(path == args.train_path))
 
     out_path = path + '.json'
     json.dump(examples, open(out_path, 'w', encoding='utf-8'), ensure_ascii=False, indent=4)
@@ -100,7 +134,7 @@ def _normalize_fb15k237_relation(relation: str) -> str:
     for token in tokens:
         if token not in dedup_tokens[-3:]:
             dedup_tokens.append(token)
-    # leaf words are more important
+    # leaf words are more important (maybe)
     relation_tokens = dedup_tokens[::-1]
     relation = ' '.join([t for idx, t in enumerate(relation_tokens)
                          if idx == 0 or relation_tokens[idx] != relation_tokens[idx - 1]])
@@ -111,7 +145,6 @@ def _process_line_fb15k237(line: str) -> dict:
     fs = line.strip().split('\t')
     assert len(fs) == 3, 'Expect 3 fields for {}'.format(line)
     head_id, relation, tail_id = fs[0], fs[1], fs[2]
-    relation = _normalize_fb15k237_relation(relation)
 
     _, head, _ = fb15k_id2ent[head_id]
     _, tail, _ = fb15k_id2ent[tail_id]
@@ -135,6 +168,8 @@ def preprocess_fb15k237(path):
     pool.close()
     pool.join()
 
+    _normalize_relations(examples, normalize_fn=_normalize_fb15k237_relation, is_train=(path == args.train_path))
+
     out_path = path + '.json'
     json.dump(examples, open(out_path, 'w', encoding='utf-8'), ensure_ascii=False, indent=4)
     print('Save {} examples to {}'.format(len(examples), out_path))
@@ -152,16 +187,13 @@ def _truncate(text: str, max_len: int):
 
 def _load_wiki5m_id2rel(path: str):
     global wiki5m_id2rel
-    text2relation = {}
+
     for line in open(path, 'r', encoding='utf-8'):
         fs = line.strip().split('\t')
         assert len(fs) >= 2, 'Invalid line: {}'.format(line.strip())
         rel_id, rel_text = fs[0], fs[1]
         rel_text = _truncate(rel_text, 10)
         wiki5m_id2rel[rel_id] = rel_text
-        assert rel_text not in text2relation, \
-            '{} has same relation text with {}'.format(rel_id, text2relation[rel_text])
-        text2relation[rel_text] = rel_id
 
     print('Load {} relations from {}'.format(len(wiki5m_id2rel), path))
 
@@ -198,7 +230,7 @@ def _process_line_wiki5m(line: str) -> dict:
     head_id, relation_id, tail_id = fs[0], fs[1], fs[2]
     example = {'head_id': head_id,
                'head': wiki5m_id2ent.get(head_id, None),
-               'relation': wiki5m_id2rel.get(relation_id, None),
+               'relation': relation_id,
                'tail_id': tail_id,
                'tail': wiki5m_id2ent.get(tail_id, None)}
     return example
@@ -218,13 +250,18 @@ def preprocess_wiki5m(path: str, is_train: bool) -> List[dict]:
     pool.close()
     pool.join()
 
+    _normalize_relations(examples, normalize_fn=lambda rel_id: wiki5m_id2rel.get(rel_id, None), is_train=is_train)
+
     invalid_examples = [ex for ex in examples if _has_none_value(ex)]
     print('Find {} invalid examples in {}'.format(len(invalid_examples), path))
     if is_train:
+        # P2439 P1962 P3484 do not exist in wikidata5m_relation.txt
+        # so after filtering, there are 819 relations instead of 822 relations
         examples = [ex for ex in examples if not _has_none_value(ex)]
     else:
         # Even though it's invalid (contains null values), we should not change validation/test dataset
         print('Invalid examples: {}'.format(json.dumps(invalid_examples, ensure_ascii=False, indent=4)))
+
     out_path = path + '.json'
     json.dump(examples, open(out_path, 'w', encoding='utf-8'), ensure_ascii=False, indent=4)
     print('Save {} examples to {}'.format(len(examples), out_path))
