@@ -17,8 +17,6 @@ parser.add_argument('--valid-path', default='', type=str, metavar='N',
                     help='path to valid data')
 parser.add_argument('--model-dir', default='', type=str, metavar='N',
                     help='path to model dir')
-parser.add_argument('--checkpoint-dir', default='', type=str, metavar='N',
-                    help='for efficient checkpointing, only used for cloud storage')
 parser.add_argument('--warmup', default=400, type=int, metavar='N',
                     help='warmup steps')
 parser.add_argument('--freeze-embedding', action='store_true',
@@ -97,11 +95,6 @@ if args.model_dir:
 else:
     assert os.path.exists(args.eval_model_path), 'One of args.model_dir and args.eval_model_path should be valid path'
     args.model_dir = os.path.dirname(args.eval_model_path)
-
-if not args.checkpoint_dir:
-    args.checkpoint_dir = args.model_dir
-else:
-    os.makedirs(args.checkpoint_dir, exist_ok=True)
 
 if args.seed is not None:
     random.seed(args.seed)

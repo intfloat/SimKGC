@@ -91,11 +91,6 @@ class Trainer:
             self.train_epoch(epoch)
             self._run_eval(epoch=epoch)
 
-        if self.args.checkpoint_dir != self.args.model_dir:
-            for f in glob.glob('{}/*last.mdl'.format(self.args.checkpoint_dir)):
-                shutil.copy(f, self.args.model_dir)
-            shutil.rmtree(self.args.checkpoint_dir, ignore_errors=True)
-
     @torch.no_grad()
     def _run_eval(self, epoch, step=0):
         metric_dict = self.eval_epoch(epoch)
@@ -103,15 +98,15 @@ class Trainer:
         if is_best:
             self.best_metric = metric_dict
 
-        filename = '{}/checkpoint_{}_{}.mdl'.format(self.args.checkpoint_dir, epoch, step)
+        filename = '{}/checkpoint_{}_{}.mdl'.format(self.args.model_dir, epoch, step)
         if step == 0:
-            filename = '{}/checkpoint_epoch{}.mdl'.format(self.args.checkpoint_dir, epoch)
+            filename = '{}/checkpoint_epoch{}.mdl'.format(self.args.model_dir, epoch)
         save_checkpoint({
             'epoch': epoch,
             'args': self.args.__dict__,
             'state_dict': self.model.state_dict(),
         }, is_best=is_best, filename=filename)
-        delete_old_ckt(path_pattern='{}/checkpoint_*.mdl'.format(self.args.checkpoint_dir),
+        delete_old_ckt(path_pattern='{}/checkpoint_*.mdl'.format(self.args.model_dir),
                        keep=self.args.max_to_keep)
 
     @torch.no_grad()

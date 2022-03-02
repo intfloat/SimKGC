@@ -6,3 +6,4 @@ entities.json
 *.tsv
 .idea/
 checkpoint/
+relations.json

@@ -15,7 +15,7 @@ SHARD_SIZE = 1000000
 
 
 def _get_shard_path(shard_id=0):
-    return '{}/shard_{}'.format(args.checkpoint_dir, shard_id)
+    return '{}/shard_{}'.format(args.model_dir, shard_id)
 
 
 def _dump_entity_embeddings(predictor: BertPredictor):
