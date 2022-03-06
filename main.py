@@ -1,10 +1,5 @@
 import torch
 import json
-
-import torch.nn.parallel
-import torch.optim
-import torch.utils.data
-import torch.utils.data.distributed
 import torch.backends.cudnn as cudnn
 
 from config import args

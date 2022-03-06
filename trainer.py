@@ -29,7 +29,6 @@ class Trainer:
         # create model
         logger.info("=> creating model")
         self.model = build_model(self.args)
-        self._freeze_layers(self.args)
         logger.info(self.model)
         self._setup_training()
 
@@ -67,20 +66,6 @@ class Trainer:
                 collate_fn=collate,
                 num_workers=args.workers,
                 pin_memory=True)
-
-    def _freeze_layers(self, args):
-        if args.freeze_embedding:
-            for name, p in self.model.named_parameters():
-                if name.find('embeddings') >= 0:
-                    p.requires_grad = False
-        if args.freeze_n_layers > 0:
-            for name, p in self.model.named_parameters():
-                if any(name.find('encoder.layer.{}.'.format(i)) >= 0 for i in range(args.freeze_n_layers)):
-                    p.requires_grad = False
-        for name, param in self.model.named_parameters():
-            if 'pooler' in name:
-                logger.info('{} does not require grad'.format(name))
-                param.requires_grad = False
 
     def train_loop(self):
         if self.args.use_amp:

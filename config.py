@@ -19,10 +19,6 @@ parser.add_argument('--model-dir', default='', type=str, metavar='N',
                     help='path to model dir')
 parser.add_argument('--warmup', default=400, type=int, metavar='N',
                     help='warmup steps')
-parser.add_argument('--freeze-embedding', action='store_true',
-                    help='freeze embedding or not')
-parser.add_argument('--freeze-n-layers', default=0, type=int, metavar='N',
-                    help='freeze bottom n layers')
 parser.add_argument('--max-to-keep', default=5, type=int, metavar='N',
                     help='max number of checkpoints to keep')
 parser.add_argument('--grad-clip', default=10.0, type=float, metavar='N',
