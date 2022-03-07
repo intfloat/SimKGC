@@ -1,7 +1,9 @@
 ## SimKGC: Simple Contrastive Knowledge Graph Completion with Pre-trained Language Models
 
 Official code repository for ACL 2022 paper 
-"SimKGC: Simple Contrastive Knowledge Graph Completion with Pre-trained Language Models".
+"[SimKGC: Simple Contrastive Knowledge Graph Completion with Pre-trained Language Models](https://arxiv.org/pdf/2203.02167)".
+
+The paper is available at [https://arxiv.org/abs/2203.02167](https://arxiv.org/abs/2203.02167).
 
 In this paper,
 we identify that one key issue for text-based knowledge graph completion is efficient contrastive learning.
