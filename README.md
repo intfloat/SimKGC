@@ -11,10 +11,9 @@ By combining large number of negatives and hardness-aware InfoNCE loss,
 SimKGC can substantially outperform existing methods on popular benchmark datasets.
 
 ## Requirements
-
-torch>=1.6 (for mixed precision training)
-
-transformers>=4.15
+* python>=3.7
+* torch>=1.6 (for mixed precision training)
+* transformers>=4.15
 
 All experiments are run with 4 V100(32GB) GPUs.
 
