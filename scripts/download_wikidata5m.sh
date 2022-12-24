@@ -7,10 +7,10 @@ REPO_DIR="$( cd "$( dirname "$0" )" && cd .. && pwd )"
 BASE_DIR="${REPO_DIR}/data/wikidata5m"
 mkdir -p ${BASE_DIR}
 
-wget -O "${BASE_DIR}/wikidata5m_text.txt.gz" https://www.dropbox.com/s/7jp4ib8zo3i6m10/wikidata5m_text.txt.gz?dl=1
-wget -O "${BASE_DIR}/wikidata5m_transductive.tar.gz" https://www.dropbox.com/s/6sbhm0rwo4l73jq/wikidata5m_transductive.tar.gz?dl=1
-wget -O "${BASE_DIR}/wikidata5m_inductive.tar.gz" https://www.dropbox.com/s/csed3cgal3m7rzo/wikidata5m_inductive.tar.gz?dl=1
-wget -O "${BASE_DIR}/wikidata5m_alias.tar.gz" https://www.dropbox.com/s/lnbhc8yuhit4wm5/wikidata5m_alias.tar.gz?dl=1
+wget -O "${BASE_DIR}/wikidata5m_text.txt.gz" https://huggingface.co/datasets/intfloat/wikidata5m/resolve/main/wikidata5m_text.txt.gz
+wget -O "${BASE_DIR}/wikidata5m_transductive.tar.gz" https://huggingface.co/datasets/intfloat/wikidata5m/resolve/main/wikidata5m_transductive.tar.gz
+wget -O "${BASE_DIR}/wikidata5m_inductive.tar.gz" https://huggingface.co/datasets/intfloat/wikidata5m/resolve/main/wikidata5m_inductive.tar.gz
+wget -O "${BASE_DIR}/wikidata5m_alias.tar.gz" https://huggingface.co/datasets/intfloat/wikidata5m/resolve/main/wikidata5m_alias.tar.gz
 
 cd ${BASE_DIR}
 tar xvfz "wikidata5m_transductive.tar.gz"
